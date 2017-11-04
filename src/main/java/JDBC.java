@@ -1,3 +1,7 @@
+import Config.Database;
+
+import java.util.Scanner;
+
 import java.sql.*;
 
 public class JDBC {
@@ -7,45 +11,63 @@ public class JDBC {
     // Database credentials
     static final String USER = "root";
     static final String PASS = "";
-    String sql;
 
 
     public static void main(String[] args) {
+
+        int selectedOperation = -1;
+
+        while (selectedOperation != 0) {
+            System.out.println("Wybierz operacje:");
+            System.out.println("1: Lista adresow");
+            System.out.println("2: Dodaj adres");
+            System.out.println("0: Wyjscie");
+
+            Scanner scanner = new Scanner(System.in);
+            selectedOperation = scanner.nextInt();
+
+            switch (selectedOperation) {
+                case 1:
+                    listAddresses();
+                    break;
+                case 2:
+                    insertAddress();
+                    break;
+            }
+        }
+    }
+
+    private static void insertAddress() {
+        Scanner scanner = new Scanner(System.in);
+
+        System.out.println("Podaj ID adresu");
+        int idAdresu = scanner.nextInt();
+        scanner.nextLine();
+
+        System.out.println("Podaj nazwe ulicy");
+        String ulica = scanner.nextLine();
+
+        System.out.println("Podaj nazwe miasta");
+        String miasto = scanner.nextLine();
+
+        System.out.println("Podaj numer mieszkania");
+        int numerMieszkania = scanner.nextInt();
+        scanner.nextLine();
+
         Connection conn = null;
         Statement stmt = null;
         try {
-            //STEP 2: Register JDBC driver
-            Class.forName("com.mysql.jdbc.Driver");
-            //STEP 3: Open a connection
-            System.out.println("Connecting to database...");
-            conn = DriverManager.getConnection(DB_URL, USER, PASS);
+            conn = Database.getConnection();
             //STEP 4: Execute a query
             System.out.println("Creating statement...");
             stmt = conn.createStatement();
-            String sql;
-            sql = "SELECT * FROM adresy";
-            ResultSet rs = stmt.executeQuery(sql);
-            sql = "INSERT INTO adresy (id_adresu, ulica, numer_domu, numer_mieszkania, kod_pocztowy, miasto) VALUES (101, 'Wiązowa','5','10', '85-333', 'Bydgoszcz', )";
+
+            String sql = "INSERT INTO adresy (id_adresu, ulica, miasto, numer_mieszkania) " +
+                    " VALUES (" + idAdresu + ", '" + ulica + "', '" + miasto + "', " + numerMieszkania + ")";
+            System.out.println(sql);
             int result = stmt.executeUpdate(sql);
-            //STEP 5: Extract data from result set
-            while (rs.next()) {
-                //Retrieve by column name
-                int id_adresu = rs.getInt("id_adresu");
-                String ulica = rs.getString("ulica");
-                int numer_domu = rs.getInt("numer_domu");
-                int numer_mieszkania = rs.getInt("numer_mieszkania");
-                int kod_pocztowy = rs.getInt("kod_pocztowy");
-                String miasto = rs.getString("miasto");
-                //Display values
-                System.out.print("ID: " + id_adresu);
-                System.out.print(", Age: " + ulica);
-                System.out.print(", Numer Domu: " + numer_domu);
-                System.out.println(", Numer Mieszkania: " + numer_mieszkania);
-                System.out.println(", Kod Pocztowy: " + kod_pocztowy);
-                System.out.println(", Miasto: " + miasto);
-            }
-            //STEP 6: Clean-up environment
-            rs.close();
+            System.out.println("Result: " + result);
+
             stmt.close();
             conn.close();
         } catch (SQLException se) {
@@ -56,5 +78,46 @@ public class JDBC {
             e.printStackTrace();
         }
         System.out.println("Goodbye!");
-    }//end main
-}//end JDBC
+    }
+
+    private static void listAddresses() {
+        Connection conn = null;
+        Statement stmt = null;
+        try {
+
+            conn = Database.getConnection();
+            //STEP 4: Execute a query
+            System.out.println("Creating statement...");
+            stmt = conn.createStatement();
+
+            String sql = "SELECT * FROM adresy";
+            ResultSet rs = stmt.executeQuery(sql);
+            //STEP 5: Extract data from result set
+            while (rs.next()) {
+                //Retrieve by column name
+                int idAdresu = rs.getInt("id_adresu");
+                String ulica = rs.getString("ulica");
+                String miasto = rs.getString("miasto");
+                int numerMieszkania = rs.getInt("numer_mieszkania");
+
+                //Display values
+                System.out.print("ID: " + idAdresu);
+                System.out.print(", ulica: " + ulica);
+                System.out.print(", miasto: " + miasto);
+                System.out.println(", numer_mieszkania: " + numerMieszkania);
+            }
+            //STEP 6: Clean-up environment
+
+
+        } catch (SQLException se) {
+            //Handle errors for JDBC
+            se.printStackTrace();
+        } catch (Exception e) {
+            //Handle errors for Class.forName
+            e.printStackTrace();
+        }
+        System.out.println("Goodbye!");
+    }
+
+}//end main
+//end JDBC
